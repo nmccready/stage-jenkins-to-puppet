@@ -1,6 +1,6 @@
 package services.repository.mongo.reactive
 
-import reactivemongo.bson.{BSONString, BSONDocument, BSONObjectID}
+import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import play.api.libs.iteratee._
 import concurrent._
 import services.repository._

@@ -3,7 +3,6 @@ import actors.context.playframework.ActorContextProvider
 import ActorContextProvider._
 import controllers.ActorsStateController
 import play.api._
-import util.OptionHelper._
 
 object Global extends GlobalSettings {
   override def onStop(app: Application) {

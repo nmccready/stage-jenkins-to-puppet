@@ -16,7 +16,7 @@ class MachineControllerIntegrationSpec
       index =>
         new Machine("name%d".format(index))
     }
-    collection(collectionName).insert[Machine](Enumerator(entities: _*))
+    collection(collectionName).bulkInsert[Machine](Enumerator(entities: _*))
   }
 
   def createValidEntity: Machine = new Machine("test1")

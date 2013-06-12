@@ -8,8 +8,8 @@ import models.json.{IWritesExtended, IReadsExtended}
 
 case class ActorState(
                        var name: String,
-                       val isAlive: Boolean,
-                       val state: String,
+                       isAlive: Boolean,
+                       state: String,
                        override var id: Option[BSONObjectID] = Some(BSONObjectID.generate)) extends IMongoModel[ActorState] {
   def getWithID = this.copy(id = Some(BSONObjectID.generate))
 
@@ -37,8 +37,8 @@ trait IActorStateReadersWriters
 object ActorStateDomain extends IActorStateReadersWriters {
 
   implicit object BSONReader extends IBSONReaderExtended[ActorState] {
-    def fromBSON(document: BSONDocument) = {
-      val doc = document.toTraversable
+    def read(document: BSONDocument) = {
+      val doc = document
       ActorState(
         doc.getAs[BSONString]("name").map(_.value).getOrElse(throw errorFrom("BSONRead", "name")),
         doc.getAs[BSONBoolean]("isAlive").map(_.value).getOrElse(throw errorFrom("BSONRead", "isAlive")),
@@ -49,12 +49,12 @@ object ActorStateDomain extends IActorStateReadersWriters {
   }
 
   implicit object BSONWriter extends IBSONWriterExtended[ActorState] {
-    def toBSON(entity: ActorState) =
+    def write(entity: ActorState) =
       BSONDocument(
         "_id" -> entity.id.getOrElse(BSONObjectID.generate),
-        "name" -> BSONString(entity.name),
-        "isAlive" -> BSONBoolean(entity.isAlive),
-        "state" -> BSONString(entity.state)
+        "name" -> entity.name,
+        "isAlive" -> entity.isAlive,
+        "state" -> entity.state
       )
   }
 
@@ -91,17 +91,17 @@ object ActorStateDomain extends IActorStateReadersWriters {
 
       (json \ "name").asOpt[String] foreach {
         name =>
-          doc = doc append ("name" -> new BSONString(name))
+          doc = doc ++ ("name" -> name)
       }
 
       (json \ "isAlive").asOpt[Boolean] foreach {
         isAlive =>
-          doc = doc append ("isAlive" -> new BSONBoolean(isAlive))
+          doc = doc ++ ("isAlive" -> isAlive)
       }
 
       (json \ "state").asOpt[String] foreach {
         port =>
-          doc = doc append ("state" -> new BSONString(port))
+          doc = doc ++ ("state" -> port)
       }
       doc
     }

@@ -16,7 +16,7 @@ class ActorsStateControllerIntegrationSpec
       index =>
         new ActorState("test%d".format(index), true, "state")
     }
-    collection(collectionName).insert[ActorState](Enumerator(entities: _*))
+    collection(collectionName).bulkInsert[ActorState](Enumerator(entities: _*))
   }
 
   def createValidEntity = new ActorState("test1", true, "state")

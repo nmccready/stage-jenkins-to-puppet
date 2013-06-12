@@ -4,7 +4,7 @@ import org.scalatest.{BeforeAndAfter, WordSpec}
 import org.scalatest.matchers.ShouldMatchers
 import play.api.libs.iteratee.Iteratee
 import reactivemongo.bson._
-import reactivemongo.bson.handlers._
+import reactivemongo.bson.DefaultBSONHandlers._
 import models.IModel
 import services.repository._
 import concurrent._
@@ -20,7 +20,7 @@ trait RepositoryBehaviors[TModel <: IModel[BSONObjectID]] {
 
   def createEntity: TModel
 
-  def baseModelRepository(implicit reader: BSONReader[TModel], writer: BSONWriter[TModel]) = {
+  def baseModelRepository(implicit reader: BSONDocumentReader[TModel], writer: BSONDocumentWriter[TModel]) = {
 
     "create" should {
       "return the entity after saving" in {

@@ -3,18 +3,18 @@ package services.repository.mongo.reactive
 import concurrent.{Future, Await}
 import concurrent.ExecutionContext.Implicits.global
 import concurrent.duration._
-import reactivemongo.bson.handlers.{BSONWriter, BSONReader}
+import reactivemongo.bson.{BSONDocumentWriter, BSONDocumentReader}
 import reactivemongo.bson.{BSONObjectID, BSONDocument}
-import reactivemongo.bson.handlers.DefaultBSONHandlers._
+import reactivemongo.bson.DefaultBSONHandlers._
 import models.mongo.reactive._
 import play.api.libs.iteratee.Enumerator
 import models.IModel
-import reactivemongo.api.DefaultCollection
+import reactivemongo.api.collections.default.BSONCollection
 
-trait IRepoTestHelper[TestModel <: IModel[BSONObjectID]] extends IMongoDbProvider with IMongoCollection{
+trait IRepoTestHelper[TestModel <: IModel[BSONObjectID]] extends IMongoDbProvider with IMongoCollection {
 
-  implicit val bsonReader: BSONReader[TestModel]
-  implicit val bsonWriter: BSONWriter[TestModel]
+  implicit val bsonReader: BSONDocumentReader[TestModel]
+  implicit val bsonWriter: BSONDocumentWriter[TestModel]
 
   def createEntity: TestModel
 
@@ -23,7 +23,7 @@ trait IRepoTestHelper[TestModel <: IModel[BSONObjectID]] extends IMongoDbProvide
 }
 
 trait IMachineRepoHelper extends IRepoTestHelper[Machine] with AbstractMachineCreator with IMachineReadersWriters {
-  def collection(name: String) = db(name)
+  def collection(name: String): BSONCollection = db[BSONCollection](name)
 }
 
 trait AbstractMachineCreator extends IMongoCollection {
@@ -34,18 +34,18 @@ trait AbstractMachineCreator extends IMongoCollection {
   }
 
   def createEntities(numberOfEntities: Int) = {
-    val entities = (0 until numberOfEntities) map {
+    val entities = 0 until numberOfEntities map {
       index => {
         val count = index + 1
         val mac = new Machine("testMachineName" + count)
         mac
       }
     }
-    collection(collectionName).insert[Machine](Enumerator(entities: _*))
+    collection(collectionName).bulkInsert[Machine](Enumerator(entities: _*))
   }
 }
 
-abstract class AbstractCreator(fColl: (String) => DefaultCollection) {
+abstract class AbstractCreator(fColl: (String) => BSONCollection) {
   def collection(name: String) = fColl(name)
 }
 
@@ -73,7 +73,7 @@ trait AbstractAppCreator extends IMongoCollection {
 
   def createEntities(numberOfEntities: Int) = {
     val ents = makeSomeEntities(numberOfEntities)
-    collection(collectionName).insert[App](Enumerator(ents: _*))
+    collection(collectionName).bulkInsert[App](Enumerator(ents: _*))
   }
 }
 
@@ -85,8 +85,8 @@ trait IAppsRepoHelper extends IRepoTestHelper[App] with AbstractAppCreator with 
     override def db = appDb
   }
 
-  override def collection(name: String) =
-    db(name)
+  override def collection(name: String): BSONCollection =
+    db[BSONCollection](name)
 
   def machineCreator = MachineCreator(collection)
 }
@@ -94,7 +94,7 @@ trait IAppsRepoHelper extends IRepoTestHelper[App] with AbstractAppCreator with 
 trait IMongoCollection {
   def collectionName: String
 
-  def collection(name: String): DefaultCollection
+  def collection(name: String): BSONCollection
 
   def clean() = Await.result(cleanAsync(), 10 seconds)
 
@@ -113,20 +113,20 @@ trait AbstractActorsStateCreator extends IMongoCollection with IActorStateReader
   }
 
   def createEntities(numberOfEntities: Int) = {
-    val entities = (0 until numberOfEntities) map {
+    val entities = 0 until numberOfEntities map {
       index => {
         val count = index + 1
         ActorState("test" + count, true, "some state")
       }
     }
-    collection(collectionName).insert[ActorState](Enumerator(entities: _*))
+    collection(collectionName).bulkInsert[ActorState](Enumerator(entities: _*))
   }
 }
 
-case class MachineCreator(fColl: (String) => DefaultCollection) extends AbstractCreator(fColl) with AbstractMachineCreator
+case class MachineCreator(fColl: (String) => BSONCollection) extends AbstractCreator(fColl) with AbstractMachineCreator
 
-case class AppCreator(fColl: (String) => DefaultCollection) extends AbstractCreator(fColl) with AbstractAppCreator {
+case class AppCreator(fColl: (String) => BSONCollection) extends AbstractCreator(fColl) with AbstractAppCreator {
   def machineCreator = MachineCreator(fColl)
 }
 
-case class ActorsStateCreator(fColl: (String) => DefaultCollection) extends AbstractCreator(fColl) with AbstractActorsStateCreator
+case class ActorsStateCreator(fColl: (String) => BSONCollection) extends AbstractCreator(fColl) with AbstractActorsStateCreator

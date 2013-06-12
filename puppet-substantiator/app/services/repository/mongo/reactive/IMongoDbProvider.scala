@@ -1,6 +1,6 @@
 package services.repository.mongo.reactive
 
-import reactivemongo.api.{MongoConnection, DefaultDB}
+import reactivemongo.api.{DefaultDB, MongoDriver}
 import services.repository.IDbProvider
 import util.ConfigurationProvider
 import collection.JavaConversions._
@@ -11,9 +11,10 @@ trait IMongoDbProvider extends IDbProvider[DefaultDB] {
 }
 
 object GlobalReactiveMongoDb extends ConfigurationProvider {
+  lazy val driver = new MongoDriver()
   lazy val db = {
     val servers = configuration.getStringList("mongodb.servers").get.toList
     val database = configuration.getString("mongodb.db").get
-    MongoConnection(servers)(database)
+    driver.connection(servers)(database)
   }
 }

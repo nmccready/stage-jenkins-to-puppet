@@ -14,7 +14,7 @@ object ApplicationBuild extends Build {
   object Dependencies {
 
     object V {
-      val reactiveMongo = "0.8"
+      val reactiveMongo = "0.9"
       val scalaTest = "2.0.M5b"
       val mockito = "1.9.0"
       val akka = "2.1.0"
@@ -32,10 +32,11 @@ object ApplicationBuild extends Build {
   }
 
   val plugs: Seq[Setting[_]] =
-    Seq[Setting[_]](PackageManagementPlugin.plug: _*) ++
-//      Seq[Setting[_]](ReleaseManagementPlugin.plug: _ *) ++
+    Seq[Setting[_]](Git.plug: _*) ++
+      Seq[Setting[_]](PackageManagementPlugin.plug: _*) ++
+      Seq[Setting[_]](ReleaseManagementPlugin.plug: _ *) ++
       Seq[Setting[_]](ScalaConfigurationPlugin.plug: _ *) ++
-//      Seq[Setting[_]](VersionManagementPlugin.plug: _ *) ++
+      Seq[Setting[_]](VersionManagementPlugin.plug: _ *) ++
       Seq[Setting[_]](Play20.plug: _*)
 
   val appDependencies = Dependencies.compileDependencies
@@ -68,7 +69,7 @@ object ApplicationBuild extends Build {
     testOptions in AllTests := Seq(
       Tests.Setup {
         () => System.setProperty("config.file", "conf/test.conf")
-        System.setProperty("http.port", "19007")
+          System.setProperty("http.port", "19007")
       },
       Tests.Filter(s => allSpecsFilter(s))
     ),
@@ -84,7 +85,7 @@ object ApplicationBuild extends Build {
     }
   )
     .settings(plugs: _*)
-    .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings : _*)
+    .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
 
   def systemSpecsFilter(name: String): Boolean = name endsWith "SystemSpec"
 

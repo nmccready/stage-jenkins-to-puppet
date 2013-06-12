@@ -3,7 +3,7 @@ resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/release
 
 resolvers += Resolver.url("Artifactory Online", url("http://repo.scala-sbt.org/scalasbt/repo"))(Resolver.ivyStylePatterns)
 
-addSbtPlugin("com.trafficland" % "sbt-plugins" % "0.6.8")
+addSbtPlugin("com.trafficland" % "sbt-plugins" % "0.7.1")
 
 addSbtPlugin("play" % "sbt-plugin" % "2.1.0")
 

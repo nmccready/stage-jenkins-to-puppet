@@ -2,7 +2,6 @@ package models.mongo.reactive
 
 import play.api.libs.json._
 import reactivemongo.bson._
-import services.repository.IUniqueCheck
 import services.repository.mongo.reactive.MongoUniqueCheck
 
 abstract class BaseUniqueCheckReader extends Reads[MongoUniqueCheck] {

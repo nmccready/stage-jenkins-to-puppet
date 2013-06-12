@@ -1,6 +1,6 @@
 package util.playframework
 
-import reactivemongo.api.{DefaultDB, MongoConnection}
+import reactivemongo.api.{MongoDriver, DefaultDB, MongoConnection}
 import play.api.Application
 import collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -10,6 +10,7 @@ object MongoDBTestConnectionManager {
   protected var testMongoDBConnection: Option[MongoConnection] = None
   protected var testMongoDBInterface: Option[DefaultDB] = None
   protected val lock = new AnyRef
+  protected val driver = new MongoDriver()
 
   def getTestMongoDBInterface(app: Application): DefaultDB = {
     lock.synchronized {
@@ -19,7 +20,7 @@ object MongoDBTestConnectionManager {
           db
         case None => {
           println("SPEC SETUP: Creating test MongoDB connection.")
-          val newConnection = MongoConnection(app.configuration.getStringList("mongodb.servers").get.toList)
+          val newConnection = driver.connection(app.configuration.getStringList("mongodb.servers").get.toList)
           val newDb = newConnection(app.configuration.getString("mongodb.db").get)
           testMongoDBConnection = Some(newConnection)
           testMongoDBInterface = Some(newDb)

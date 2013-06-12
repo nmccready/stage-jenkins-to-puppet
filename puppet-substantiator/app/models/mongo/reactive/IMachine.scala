@@ -9,7 +9,7 @@ import models.json.{IReadsExtended, IWritesExtended}
 
 case class Machine(var name: String,
                    override var id: Option[BSONObjectID] = Some(BSONObjectID.generate),
-                   val isAlive: Boolean = true) extends IMongoModel[Machine] {
+                   isAlive: Boolean = true) extends IMongoModel[Machine] {
   def isEqualTo(other: Machine, useID: Boolean): Boolean = {
     super.isEqualTo(other, useID) &&
       name == other.name &&
@@ -18,7 +18,9 @@ case class Machine(var name: String,
 }
 
 trait IMachineReadersWriters extends IReadersWriters[Machine] {
+
   import Machine._
+
   override implicit lazy val jsonReader = JSONReader
   override implicit lazy val jsonWriter = JSONWriter
   override implicit lazy val bsonReader = BSONReader
@@ -31,8 +33,8 @@ trait IMachineReadersWriters extends IReadersWriters[Machine] {
 object Machine extends IMachineReadersWriters {
 
   implicit object BSONReader extends IBSONReaderExtended[Machine] {
-    def fromBSON(document: BSONDocument) = {
-      val doc = document.toTraversable
+    def read(document: BSONDocument) = {
+      val doc = document
 
       new Machine(
         doc.getAs[BSONString]("name").map(_.value).getOrElse(throw errorFrom("BSONRead", "name")),
@@ -43,11 +45,11 @@ object Machine extends IMachineReadersWriters {
   }
 
   implicit object BSONWriter extends IBSONWriterExtended[Machine] {
-    def toBSON(entity: Machine) =
+    def write(entity: Machine) =
       BSONDocument(
         "_id" -> entity.id.getOrElse(BSONObjectID.generate),
-        "name" -> BSONString(entity.name),
-        "isAlive" -> BSONBoolean(entity.isAlive)
+        "name" -> entity.name,
+        "isAlive" -> entity.isAlive
       )
   }
 
@@ -82,12 +84,12 @@ object Machine extends IMachineReadersWriters {
 
       (json \ "name").asOpt[String] foreach {
         name =>
-          doc = doc append ("name" -> new BSONString(name))
+          doc = doc ++ ("name" -> name)
       }
 
       (json \ "isAlive").asOpt[Boolean] foreach {
         isAlive =>
-          doc = doc append ("isAlive" -> new BSONBoolean(isAlive))
+          doc = doc ++ ("isAlive" -> isAlive)
       }
 
       doc

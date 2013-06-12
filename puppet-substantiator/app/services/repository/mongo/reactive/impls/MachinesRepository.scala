@@ -8,7 +8,7 @@ import reactivemongo.bson.{BSONArray, BSONString, BSONDocument}
 
 trait IMachinesRepository
   extends MongoBaseRepository[Machine]
-  with IMongoUniqueCheckRepository[Machine] with IMachineReadersWriters {
+  with MongoUniqueCheckRepository[Machine] with IMachineReadersWriters {
   def getByName(name: String)(implicit context: ExecutionContext): Future[Option[Machine]]
 
   def machineExists(name: String)(implicit context: ExecutionContext): Future[Boolean]
@@ -24,27 +24,27 @@ abstract class MachinesRepository
   def machineExists(name: String)(implicit context: ExecutionContext): Future[Boolean] = {
     for {
       results <- getByName(name)
-    } yield (results.isDefined)
+    } yield results.isDefined
   }
 
   def machinesExistByNames(names: List[String])
                           (implicit context: ExecutionContext): Future[Map[String, Boolean]] = {
     val multipleNameCriteria = MongoSearchCriteria(BSONDocument("name" -> BSONDocument(
-      "$in" -> BSONArray(names.map(s => new BSONString(s)): _*)
+      "$in" -> BSONArray(names.map(s => new BSONString(s)))
     )), None, None)
 
     val futResults = search(multipleNameCriteria)
     for {
       results <- futResults
       machineSeq <- results.results.run[List[Machine]](modelIteratee).map(m => m)
-    } yield (names.map(name => (name, machineSeq.exists(m => m.name == name))).toMap)
+    } yield names.map(name => (name, machineSeq.exists(m => m.name == name))).toMap
   }
 
   def getAllMem()(implicit context: ExecutionContext) = {
     val enum = getAll
     for {
       machineSeq <- enum.run[List[Machine]](modelIteratee).map(m => m)
-    } yield (machineSeq)
+    } yield machineSeq
   }
 }
 

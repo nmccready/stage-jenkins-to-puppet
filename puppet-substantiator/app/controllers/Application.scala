@@ -2,7 +2,7 @@ package controllers
 
 import play.api.mvc._
 import play.api._
-import AppInfo._
+import init.OurAppInfo._
 
 object Application extends Controller with GlobalSettings {
 

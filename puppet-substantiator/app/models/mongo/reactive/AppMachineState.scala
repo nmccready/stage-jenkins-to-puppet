@@ -2,7 +2,7 @@ package models.mongo.reactive
 
 import play.api.libs.json._
 import reactivemongo.bson._
-import reactivemongo.bson.handlers._
+import reactivemongo.bson.DefaultBSONHandlers._
 import models.Model._
 import models.json.{IWritesExtended, IReadsExtended}
 
@@ -12,13 +12,13 @@ Hybrid Mongo Schema of Embedded to Normalized
       - machine state - ie machine isAlive.
 - non normalized this class being the actual current state of an application on a machine!
  */
-case class AppMachineState(val machineName: String, val actual: Option[String] = None)
+case class AppMachineState(machineName: String, actual: Option[String] = None)
 
 object AppMachineState {
 
-  implicit object AppMachineBSONReader extends BSONReader[AppMachineState] with IBSONReaderExtended[AppMachineState] {
-    override def fromBSON(document: BSONDocument) = {
-      val doc = document.toTraversable
+  implicit object AppMachineBSONReader extends IBSONReaderExtended[AppMachineState] {
+    override def read(document: BSONDocument) = {
+      val doc = document
 
       AppMachineState(
         doc.getAs[BSONString]("machineName").map(_.value).getOrElse(throw errorFrom("BSONRead", "machineName")),
@@ -28,11 +28,11 @@ object AppMachineState {
   }
 
   implicit object AppMachineStateBSONWriter extends IBSONWriterExtended[AppMachineState] {
-    override def toBSON(entity: AppMachineState) = {
+    override def write(entity: AppMachineState) = {
       val doc = BSONDocument(
-        "machineName" -> BSONString(entity.machineName))
+        "machineName" -> entity.machineName)
       entity.actual match {
-        case Some(act) => doc.append("actual" -> BSONString(act))
+        case Some(act) => doc ++ ("actual" -> act)
         case None => doc
       }
     }

@@ -1,15 +1,15 @@
 package models.mongo.reactive
 
 import reactivemongo.bson.{BSONDocument, BSONArray}
-import reactivemongo.bson.handlers.{BSONWriter, BSONReader}
+import reactivemongo.bson.{BSONDocumentReader, BSONDocumentWriter}
 
-trait IBSONWriterExtended[Model] extends BSONWriter[Model] {
-  def toBSONArray(many: List[Model]): BSONArray = {
-    BSONArray.apply(many.map(toBSON): _*)
+trait IBSONWriterExtended[Model] extends BSONDocumentWriter[Model] {
+  def writes(many: List[Model]): BSONArray = {
+    BSONArray.apply(many.map(write))
   }
 }
 
-trait IBSONReaderExtended[Model] extends BSONReader[Model] {
-  def fromBSONArray(bsonArray: BSONArray): List[Model] =
-    bsonArray.toTraversable.toList.map(bson => fromBSON(bson.asInstanceOf[BSONDocument]))
+trait IBSONReaderExtended[Model] extends BSONDocumentReader[Model] {
+  def reads(bsonArray: BSONArray): List[Model] =
+    bsonArray.values.toList.map(bson => read(bson.asInstanceOf[BSONDocument]))
 }

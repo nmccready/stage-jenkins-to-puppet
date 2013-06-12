@@ -7,16 +7,16 @@ import services.repository.mongo.reactive.IMongoCollection
 
 trait LiveMongoDBConnection extends IMongoCollection {
 
-  protected implicit val app:Application
+  protected implicit val app: Application
 
-  private def getTestMongoDBInterface() = MongoDBTestConnectionManager.getTestMongoDBInterface(app)
+  private def getTestMongoDBInterface = MongoDBTestConnectionManager.getTestMongoDBInterface(app)
 
   protected def dropDatabase() = {
     getTestMongoDBInterface.command(new DropDatabase())
   }
 
   override def collection(collectionName: String) =
-    getTestMongoDBInterface().collection(collectionName)
+    getTestMongoDBInterface.collection(collectionName)
 
   protected def closeConnection() = MongoDBTestConnectionManager.closeMongoDBConnection()
 }

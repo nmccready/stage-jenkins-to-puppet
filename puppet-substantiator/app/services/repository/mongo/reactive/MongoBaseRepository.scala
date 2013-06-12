@@ -2,8 +2,7 @@ package services.repository.mongo.reactive
 
 import play.api.libs.iteratee.{Enumerator, Enumeratee}
 import reactivemongo.bson._
-import handlers.{BSONWriter, BSONReader}
-import reactivemongo.bson.handlers.DefaultBSONHandlers._
+import DefaultBSONHandlers._
 import reactivemongo.core.commands.Count
 import util.IConfigurationProvider
 import concurrent.{Future, ExecutionContext}
@@ -11,20 +10,20 @@ import models.mongo.reactive.IMongoModel
 import services.repository._
 import scala.Some
 import reactivemongo.api.QueryOpts
-import reactivemongo.api.QueryBuilder
 import reactivemongo.bson.BSONInteger
+import reactivemongo.api.collections.default.BSONCollection
 
 abstract class MongoBaseRepository[TModel <: IMongoModel[TModel]]
   extends IMongoRepository[TModel]
   with IMongoDbProvider
   with IConfigurationProvider {
 
-  implicit val bsonReader: BSONReader[TModel]
-  implicit val bsonWriter: BSONWriter[TModel]
+  implicit val bsonReader: BSONDocumentReader[TModel]
+  implicit val bsonWriter: BSONDocumentWriter[TModel]
 
   protected def collectionName: String
 
-  protected val collection = db.collection(collectionName)
+  protected val collection = db.collection[BSONCollection](collectionName)
 
   protected def projection: Option[BSONDocument] = None
 
@@ -105,11 +104,11 @@ abstract class MongoBaseRepository[TModel <: IMongoModel[TModel]]
   }
 
   def get(id: BSONObjectID)(implicit context: ExecutionContext): Future[Either[Option[TModel], Exception]] = {
-    collection.find[BSONDocument, TModel](BSONDocument("_id" -> id)).headOption().map(model => Left(model))
+    collection.find(BSONDocument("_id" -> id)).cursor[TModel].headOption().map(model => Left(model))
   }
 
   def getAll(implicit context: ExecutionContext): Enumerator[TModel] = {
-    collection.find[BSONDocument, TModel](BSONDocument()).enumerate()
+    collection.find(BSONDocument()).cursor[TModel].enumerate()
   }
 
   def search(criteria: ISearchCriteria[BSONDocument])(implicit context: ExecutionContext): Future[ISearchResults[TModel]] = {
@@ -119,14 +118,21 @@ abstract class MongoBaseRepository[TModel <: IMongoModel[TModel]]
 
     db.command(Count(collectionName, Some(criteria.query))) map {
       count =>
-        val enumerator = criteria.page match {
-          case Some(paging) =>
-            collection.find[TModel](QueryBuilder(Some(criteria.query), sortDoc, projectionDoc = projection), QueryOpts(paging.skip)).enumerate() &> Enumeratee.take(paging.limit)
-          case None =>
-            collection.find[TModel](QueryBuilder(Some(criteria.query), sortDoc, projectionDoc = projection)).enumerate()
+        val enumerator = (criteria.page, sortDoc) match {
+          case (Some(paging), Some(sort)) =>
+            collection.find(criteria.query)
+              .sort(sort)
+              .options(QueryOpts(paging.skip))
+              .cursor[TModel].enumerate() &> Enumeratee.take(paging.limit)
+          case (Some(paging), None) =>
+            collection.find(criteria.query)
+              .cursor[TModel].enumerate() &> Enumeratee.take(paging.limit)
+          case (None, Some(sort)) =>
+            collection.find(criteria.query).sort(sort).cursor[TModel].enumerate()
+          case (None, None) =>
+            collection.find(criteria.query).cursor[TModel].enumerate()
         }
         MongoSearchResults[TModel](count, enumerator)
-
     }
   }
 
@@ -135,6 +141,6 @@ abstract class MongoBaseRepository[TModel <: IMongoModel[TModel]]
   }
 
   def searchSingle(criteria: ISearchCriteria[BSONDocument])(implicit context: ExecutionContext): Future[Option[TModel]] = {
-    collection.find[TModel](QueryBuilder(Some(criteria.query), projectionDoc = projection)).headOption()
+    collection.find(criteria.query).cursor[TModel].headOption()
   }
 }

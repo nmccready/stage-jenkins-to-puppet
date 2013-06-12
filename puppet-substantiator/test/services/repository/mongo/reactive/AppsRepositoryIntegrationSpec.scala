@@ -4,7 +4,8 @@ import impls.{AppsRepository, AppRepositoryException}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfter, WordSpec}
 import org.scalatest.matchers.ShouldMatchers
 import reactivemongo.bson._
-import reactivemongo.bson.handlers.DefaultBSONHandlers._
+import reactivemongo.bson.DefaultBSONHandlers._
+import reactivemongo.api.collections.default.BSONCollection
 import models.mongo.reactive._
 import concurrent.ExecutionContext.Implicits.global
 import concurrent._
@@ -26,7 +27,7 @@ class AppsRepositoryIntegrationSpec
   }
   after {
     machineRepoHelper.clean()
-    Await.result(db.collection(collectionName).remove(query = BSONDocument(), firstMatchOnly = false), 10 seconds)
+    Await.result(db.collection[BSONCollection](collectionName).remove(query = BSONDocument(), firstMatchOnly = false), 10 seconds)
   }
 
   override def afterAll(configMap: Map[String, Any]) {

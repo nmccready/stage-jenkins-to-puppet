@@ -6,7 +6,7 @@ import services.repository.mongo.reactive._
 
 trait IActorsStateRepository
   extends MongoBaseRepository[ActorState]
-  with IMongoUniqueCheckRepository[ActorState] with IActorStateReadersWriters
+  with MongoUniqueCheckRepository[ActorState] with IActorStateReadersWriters
 
 abstract class ActorsStateRepository
   extends IActorsStateRepository {

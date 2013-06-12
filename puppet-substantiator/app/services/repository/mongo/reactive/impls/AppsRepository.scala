@@ -5,7 +5,7 @@ import util.ConfigurationProvider
 import services.repository.mongo.reactive._
 import concurrent._
 
-trait IAppsRepository extends MongoBaseRepository[App] with IMongoUniqueCheckRepository[App] {
+trait IAppsRepository extends MongoBaseRepository[App] with MongoUniqueCheckRepository[App] {
   protected def machineRepo: IMachinesRepository with IMongoDbProvider
 
 }

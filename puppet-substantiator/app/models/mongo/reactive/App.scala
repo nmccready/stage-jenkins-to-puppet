@@ -8,12 +8,12 @@ import models.json.{IWritesExtended, IReadsExtended}
 
 case class App(
                 var name: String,
-                val expected: String,
-                val testUrl: String,
-                val actualCluster: List[AppMachineState],
-                val port: Option[String] = Some("9000"),
+                expected: String,
+                testUrl: String,
+                actualCluster: List[AppMachineState],
+                port: Option[String] = Some("9000"),
                 override var id: Option[BSONObjectID] = Some(BSONObjectID.generate),
-                val renameAppTo: Option[String] = None) extends IMongoModel[App] {
+                renameAppTo: Option[String] = None) extends IMongoModel[App] {
   def getWithID = this.copy(id = Some(BSONObjectID.generate))
 
   def isEqualTo(other: App, useID: Boolean): Boolean = {
@@ -62,13 +62,13 @@ trait IAppReadersWriters extends IReadersWriters[App] {
 object App extends IAppReadersWriters {
 
   implicit object BSONReader extends IBSONReaderExtended[App] {
-    def fromBSON(document: BSONDocument) = {
-      val doc = document.toTraversable
+    def read(document: BSONDocument) = {
+      val doc = document
       App(
         doc.getAs[BSONString]("name").map(_.value).getOrElse(throw errorFrom("BSONRead", "name")),
         doc.getAs[BSONString]("expected").map(_.value).getOrElse(throw errorFrom("BSONRead", "expected")),
         doc.getAs[BSONString]("testUrl").map(_.value).getOrElse(throw errorFrom("BSONRead", "testUrl")),
-        bsonReaderAppMach.fromBSONArray(doc.getAs[BSONArray]("actualCluster").getOrElse(throw errorFrom("BSONRead", "actualCluster"))),
+        bsonReaderAppMach.reads(doc.getAs[BSONArray]("actualCluster").getOrElse(throw errorFrom("BSONRead", "actualCluster"))),
         doc.getAs[BSONString]("port").map(_.value),
         doc.getAs[BSONObjectID]("_id"),
         doc.getAs[BSONString]("renameAppTo").map(_.value)
@@ -77,15 +77,15 @@ object App extends IAppReadersWriters {
   }
 
   implicit object BSONWriter extends IBSONWriterExtended[App] {
-    def toBSON(entity: App) =
+    def write(entity: App) =
       BSONDocument(
         "_id" -> entity.id.getOrElse(BSONObjectID.generate),
-        "name" -> BSONString(entity.name),
-        "expected" -> BSONString(entity.expected),
-        "testUrl" -> BSONString(entity.testUrl),
-        "port" -> entity.port.map(BSONString(_)),
-        "actualCluster" -> bsonWriterAppMach.toBSONArray(entity.actualCluster),
-        "renameAppTo" -> entity.renameAppTo.map(BSONString(_))
+        "name" -> entity.name,
+        "expected" -> entity.expected,
+        "testUrl" -> entity.testUrl,
+        "port" -> entity.port,
+        "actualCluster" -> bsonWriterAppMach.writes(entity.actualCluster),
+        "renameAppTo" -> entity.renameAppTo
       )
   }
 
@@ -132,17 +132,17 @@ object App extends IAppReadersWriters {
 
       (json \ "name").asOpt[String] foreach {
         name =>
-          doc = doc append ("name" -> new BSONString(name))
+          doc = doc ++ ("name" -> name)
       }
 
       (json \ "isAlive").asOpt[Boolean] foreach {
         isAlive =>
-          doc = doc append ("isAlive" -> new BSONBoolean(isAlive))
+          doc = doc ++ ("isAlive" -> isAlive)
       }
 
       (json \ "port").asOpt[String] foreach {
         port =>
-          doc = doc append ("port" -> new BSONString(port))
+          doc = doc ++ ("port" -> port)
       }
       doc
     }
