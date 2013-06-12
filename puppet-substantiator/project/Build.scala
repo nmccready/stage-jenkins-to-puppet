@@ -9,7 +9,7 @@ import trafficland.opensource.sbt.plugins.packagemanagement.PackageManagementPlu
 object ApplicationBuild extends Build {
 
   val appName = "puppet-substantiator"
-  val appVersion = "1.0.0-SNAPSHOT".toReleaseFormat()
+  val appVersion = "1.0.1-SNAPSHOT".toReleaseFormat()
 
   object Dependencies {
 
